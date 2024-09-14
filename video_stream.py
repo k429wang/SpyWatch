@@ -43,16 +43,13 @@ class TelloDroneAPI:
     def start_recording(self):
         self.connection.sendto("streamon".encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
         
-        with open('output.txt', 'w') as file:
-            while True: 
-                try:
-                    data, server = self.sock.recvfrom(1518)
-                    file.write(data.decode("utf-8"))
-                except Exception:
-                    print ('\nExit . . .\n')
-                    break
-
-
+        while True: 
+            try:
+                data, server = self.sock.recvfrom(1518)
+                file.write(data.decode("utf-8"))
+            except Exception:
+                print ('\nExit . . .\n')
+                break
     
     def switch_listening_port(self, port):
         self.TELLO_UDP_PORT = port
@@ -60,11 +57,11 @@ class TelloDroneAPI:
 if __name__ == "__main__":
     my_drone = TelloDroneAPI()
 
-    print ('Tello: command takeoff land flip forward back left right \r\n       up down cw ccw speed speed?\r\n')
+    print('Tello: command takeoff land flip forward back left right \r\n       up down cw ccw speed speed?\r\n')
 
     print('SpyWatch: port ')
 
-    print ('end -- quit demo.\r\n')
+    print('end -- quit demo.\r\n')
 
     while True: 
         try:            
