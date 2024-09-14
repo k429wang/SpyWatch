@@ -1,54 +1,78 @@
 import socket
+import threading
 
 class TelloDroneAPI:
     def __init__(self):
-        
-        self.UDP_IP = '192.168.10.1'
-        self.UDP_PORT = 8889 # Send command/receive response
-        self.tello_address = (self.UDP_IP, self.UDP_PORT)
-
-        print("UDP IP: %s" % self.UDP_IP)
-        print("UDP PORT: %s" % self.UDP_PORT)
+        # Initialize UDP connection to Tello drone
+        host = ''
+        port = 9000
+        locaddr = (host,port) 
 
         self.connection = socket.socket(socket.AF_INET, # Internet
                                 socket.SOCK_DGRAM # UDP
                                 )
         
-        # Test connection
+        self.TELLO_UDP_IP = '192.168.10.1'
+        self.TELLO_UDP_PORT = 8889
+        
+
+        self.connection.bind(locaddr)
+
+        # Setup async thread to receive responses from drone
+        def recv():
+            count = 0
+            while True: 
+                try:
+                    data, server = self.connection.recvfrom(1518)
+                    print(data.decode(encoding="utf-8"))
+                except Exception:
+                    print ('\nExit . . .\n')
+                    break
+
+        recvThread = threading.Thread(target=recv)
+        recvThread.start()
+        
+        # Test connection (possible responses: ok, error)
+        # TODO: do i have to send this command before EVERY command, or just once at the beginning?
         print("Establishing connection..")
 
-        msg = "command"
-        msg = msg.encode(encoding="utf-8") 
+        msg = "command".encode(encoding="utf-8") 
 
-        self.connection.sendto(msg, (self.UDP_IP, self.UDP_PORT))
-
-        self.connection.bind(self.tello_address)
-
-        while True:
-            data, addr = self.connection.recvfrom(1024)
-            print("received message: %s" % data)
-            if data == "ok":
-                print("Connection successful!")
-                break
-            elif data == "error":
-                print("Connection failed!")
-            else:
-                print("Unknown error: ")
+        self.connection.sendto(msg, (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
 
     def send_command(self, message):
         # Sending
-        print("message: %s" % message)
+        print("command: %s" % message)
 
-        self.connection.sendto(message, (self.UDP_IP, self.UDP_PORT))
-
-    def receive_command(self):
-        # Receiving
-        self.connection.bind((self.UDP_IP, self.UDP_PORT))
-
-        while True:
-            data, addr = self.connection.recvfrom(1024)
-            print("received message: %s" % data)
+        self.connection.sendto(message.encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
+    
+    def switch_listening_port(self, port):
+        self.TELLO_UDP_PORT = port
 
 if __name__ == "__main__":
     my_drone = TelloDroneAPI()
-    my_drone.send_command()
+
+    print ('Tello: command takeoff land flip forward back left right \r\n       up down cw ccw speed speed?\r\n')
+
+    print('SpyWatch: port ')
+
+    print ('end -- quit demo.\r\n')
+
+    while True: 
+        try:            
+            msg = input("")
+
+            if 'end' in msg:
+                print ('...')
+                my_drone.connection.close()  
+                break
+                
+            if 'port' in msg:
+                my_drone.switch_listening_port(msg)
+            else:
+                # Send data
+                my_drone.send_command(msg)
+        except KeyboardInterrupt:
+            print ('\n . . .\n')
+            my_drone.connection.close()  
+            break
