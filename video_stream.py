@@ -25,20 +25,6 @@ class TelloDroneAPI:
         
 
         self.connection.bind(droneaddr)
-
-        # Setup async thread to receive responses from drone
-        def recv():
-            count = 0
-            while True: 
-                try:
-                    data, server = self.connection.recvfrom(1518)
-                    print(data.decode(encoding="utf-8"))
-                except Exception:
-                    print ('\nExit . . .\n')
-                    break
-
-        recvThread = threading.Thread(target=recv)
-        recvThread.start()
         
         # Test connection (possible responses: ok, error)
         # TODO: do i have to send this command before EVERY command, or just once at the beginning?
@@ -57,13 +43,14 @@ class TelloDroneAPI:
     def start_recording(self):
         self.connection.sendto("streamon".encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
         
-
-        while True: 
-            try:
-                data, server = self.sock.recvfrom(1518)
-            except Exception:
-                print ('\nExit . . .\n')
-                break
+        with open('output.txt', 'w') as file:
+            while True: 
+                try:
+                    data, server = self.sock.recvfrom(1518)
+                    file.write(data.decode("utf-8"))
+                except Exception:
+                    print ('\nExit . . .\n')
+                    break
 
 
     
