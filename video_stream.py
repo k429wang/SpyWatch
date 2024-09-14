@@ -1,13 +1,21 @@
 import socket
 import threading
+import cv2
 
 class TelloDroneAPI:
     def __init__(self):
         # Initialize UDP connection to Tello drone
         host = ''
         port = 9000
-        locaddr = (host,port) 
+        droneaddr = (host,port) 
+        
 
+        
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        
+        locaddr = ('0.0.0.0', 11111)
+        self.sock.bind(locaddr)
+        
         self.connection = socket.socket(socket.AF_INET, # Internet
                                 socket.SOCK_DGRAM # UDP
                                 )
@@ -16,7 +24,7 @@ class TelloDroneAPI:
         self.TELLO_UDP_PORT = 8889
         
 
-        self.connection.bind(locaddr)
+        self.connection.bind(droneaddr)
 
         # Setup async thread to receive responses from drone
         def recv():
@@ -46,6 +54,19 @@ class TelloDroneAPI:
 
         self.connection.sendto(message.encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
     
+    def start_recording(self):
+        self.connection.sendto("streamon".encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
+        
+
+        while True: 
+            try:
+                data, server = self.sock.recvfrom(1518)
+            except Exception:
+                print ('\nExit . . .\n')
+                break
+
+
+    
     def switch_listening_port(self, port):
         self.TELLO_UDP_PORT = port
 
@@ -61,7 +82,6 @@ if __name__ == "__main__":
     while True: 
         try:            
             msg = input("")
-
             if 'end' in msg:
                 print ('...')
                 my_drone.connection.close()  
@@ -72,6 +92,7 @@ if __name__ == "__main__":
             else:
                 # Send data
                 my_drone.send_command(msg)
+                my_drone.start_recording()
         except KeyboardInterrupt:
             print ('\n . . .\n')
             my_drone.connection.close()  
