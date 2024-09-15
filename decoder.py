@@ -22,8 +22,8 @@ def save_stream_as_mp4(binary_data, output_file):
 # Example usage:
 # binary_data = ...  # Binary data from the video stream
 # save_stream_as_mp4(binary_data, 'output_video.mp4')
-
-binary_video_data = ''
-with open('output.bin', 'rb') as f:
-    binary_video_data = f.read()
-save_stream_as_mp4(binary_video_data, 'output_video.mp4')
+if __name__ == "__main__":
+    binary_video_data = ''
+    with open('output.bin', 'rb') as f:
+        binary_video_data = f.read()
+    save_stream_as_mp4(binary_video_data, 'output_video.mp4')
