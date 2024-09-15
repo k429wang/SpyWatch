@@ -1,6 +1,7 @@
 import socket
 import threading
 import cv2
+import time
 
 class TelloDroneAPI:
     def __init__(self):
@@ -9,26 +10,21 @@ class TelloDroneAPI:
         port = 9000
         droneaddr = (host,port) 
         
-
-        
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         locaddr = ('0.0.0.0', 11111)
         self.sock.bind(locaddr)
         
         self.connection = socket.socket(socket.AF_INET, # Internet
-                                socket.SOCK_DGRAM # UDP
-                                )
+                                        socket.SOCK_DGRAM) # UDP                                
         
         self.TELLO_UDP_IP = '192.168.10.1'
         self.TELLO_UDP_PORT = 8889
         
-
         self.connection.bind(droneaddr)
         
         # Test connection (possible responses: ok, error)
-        # TODO: do i have to send this command before EVERY command, or just once at the beginning?
-        print("Establishing connection..")
+        print("\nEstablishing connection...\n")
 
         msg = "command".encode(encoding="utf-8") 
 
@@ -36,24 +32,20 @@ class TelloDroneAPI:
 
     def send_command(self, message):
         # Sending
-        print("command: %s" % message)
-
         self.connection.sendto(message.encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
-    
-    def start_recording(self):
-        self.connection.sendto("streamon".encode(encoding="utf-8"), (self.TELLO_UDP_IP, self.TELLO_UDP_PORT))
-        with open('output.txt', 'a') as file:
 
-            while True: 
-                try:
-                    data, server = self.sock.recvfrom(1518)
-                    file.write(data.decode("utf-8"))
-                except Exception:
-                    print ('\nExit . . .\n')
-                    break
-    
-    def switch_listening_port(self, port):
-        self.TELLO_UDP_PORT = port
+        if message == "streamon":
+            with open('output.bin', 'wb') as file:
+                t_end = time.time() + 1
+                while time.time() < t_end:
+                    try:
+                        data, server = self.sock.recvfrom(1518)
+                        print(data)
+                        file.write(data)
+                    except Exception as e:
+                        print ('LOOP FAILED %s\n' % e)
+                        break
+                print("BROKE OUT OF LOOP")
 
 if __name__ == "__main__":
     my_drone = TelloDroneAPI()
@@ -71,13 +63,8 @@ if __name__ == "__main__":
                 print ('...')
                 my_drone.connection.close()  
                 break
-                
-            if 'port' in msg:
-                my_drone.switch_listening_port(msg)
             else:
-                # Send data
                 my_drone.send_command(msg)
-                my_drone.start_recording()
         except KeyboardInterrupt:
             print ('\n . . .\n')
             my_drone.connection.close()  
