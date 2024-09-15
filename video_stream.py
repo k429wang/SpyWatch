@@ -3,9 +3,25 @@ import threading
 import cv2
 import time
 import base64
+import keyboard
 
 class TelloDroneAPI:
     def __init__(self):
+        self.commands = {
+            's': 'back 20',
+            'w': 'forward 20',
+            'a': 'left 20',
+            'd': 'right 20',
+            'e': 'cw 20',
+            'q': 'ccw 20',
+            'up': 'up 20',
+            'down': 'down 20',
+            't': 'takeoff',
+            'l': 'land',
+            '1': 'streamon',
+            '2': 'streamoff',
+            # Add more key-command mappings as needed
+        }
         # Initialize UDP connection to Tello drone
         host = ''
         port = 9000
@@ -47,6 +63,12 @@ class TelloDroneAPI:
                         print ('LOOP FAILED: %s\n' % e)
                         break
                 print("BROKE OUT OF LOOP")
+                
+    def handle_key_press(self, key, command, delay=0.2):
+        # Send command continuously while key is pressed
+        while keyboard.is_pressed(key):
+            self.send_command(command)
+            time.sleep(delay)
 
 if __name__ == "__main__":
     my_drone = TelloDroneAPI()
@@ -58,15 +80,13 @@ if __name__ == "__main__":
     print('end -- quit demo.\r\n')
 
     while True: 
-        try:            
-            msg = input("")
-            if 'end' in msg:
-                print ('...')
-                my_drone.connection.close()  
-                break
-            else:
-                my_drone.send_command(msg)
-        except KeyboardInterrupt:
-            print ('\n . . .\n')
-            my_drone.connection.close()  
+        for key, command in my_drone.commands.items():
+            if keyboard.is_pressed(key):
+                # Start a new thread to handle continuous command sending
+                threading.Thread(target=my_drone.handle_key_press, args=(key, command), daemon=True).start()
+
+        # Exit the loop if 'm' is pressed
+        if keyboard.is_pressed('m'):
+            print("Exiting...")
+            my_drone.send_command("land")
             break
