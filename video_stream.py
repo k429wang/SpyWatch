@@ -2,6 +2,7 @@ import socket
 import threading
 import cv2
 import time
+import base64
 
 class TelloDroneAPI:
     def __init__(self):
@@ -43,7 +44,7 @@ class TelloDroneAPI:
                         print(data)
                         file.write(data)
                     except Exception as e:
-                        print ('LOOP FAILED %s\n' % e)
+                        print ('LOOP FAILED: %s\n' % e)
                         break
                 print("BROKE OUT OF LOOP")
 
