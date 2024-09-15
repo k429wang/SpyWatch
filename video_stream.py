@@ -1,8 +1,5 @@
 import socket
 import time
-import base64
-import threading
-import keyboard
 from decoder import save_stream_as_mp4
 from symphonicAPI import transcribe
 
@@ -15,10 +12,10 @@ class TelloDroneAPI:
             'd': 'right 20',
             'e': 'cw 20',
             'q': 'ccw 20',
-            'up': 'up 20',
-            'down': 'down 20',
-            't': 'takeoff',
-            'l': 'land',
+            'r': 'up 20',
+            'f': 'down 20',
+            'z': 'takeoff',
+            'x': 'land',
             '1': 'streamon',
             '2': 'streamoff',
             # Add more key-command mappings as needed
@@ -54,12 +51,11 @@ class TelloDroneAPI:
 
         if message == "streamon":
             self.initialize_stream()
-        elif message == "transcribe":
-            self.transcribe()
 
     def initialize_stream(self):
+        self.send_command("takeoff")
         with open('output.bin', 'wb') as file:
-            t_end = time.time() + 5
+            t_end = time.time() + 10
             while time.time() < t_end:
                 try:
                     data, server = self.sock.recvfrom(1518)
@@ -73,12 +69,6 @@ class TelloDroneAPI:
                 binary_video_data = f.read()
             save_stream_as_mp4(binary_video_data, 'output_video.mp4')
             print(transcribe('output_video.mp4'))
-
-    def handle_key_press(self, key, command, delay=0.2):
-        # Send command continuously while key is pressed
-        while keyboard.is_pressed(key):
-            self.send_command(command)
-            time.sleep(delay)
                 
 if __name__ == "__main__":
     my_drone = TelloDroneAPI()
@@ -87,13 +77,24 @@ if __name__ == "__main__":
     print('end -- quit demo.\r\n')
 
     while True: 
-        for key, command in my_drone.commands.items():
-            if keyboard.is_pressed(key):
-                # Start a new thread to handle continuous command sending
-                threading.Thread(target=my_drone.handle_key_press, args=(key, command), daemon=True).start()
-
-        # Exit the loop if 'm' is pressed
-        if keyboard.is_pressed('m'):
-            print("Exiting...")
-            my_drone.send_command("land")
+        try:            
+            msg = input("")
+            if 'end' in msg:
+                my_drone.send_command("land")
+                print ('...')
+                my_drone.connection.close()  
+                break
+            if 'auto' in msg:
+                my_drone.send_command("takeoff")
+                my_drone.send_command("streamon")
+                my_drone.send_command("land")
+                print ('...')
+                my_drone.connection.close()  
+                break
+            else:
+                if msg in my_drone.commands:
+                    my_drone.send_command(my_drone.commands[msg])
+        except KeyboardInterrupt:
+            print ('\n . . .\n')
+            my_drone.connection.close()  
             break
