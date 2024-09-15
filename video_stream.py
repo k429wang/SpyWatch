@@ -40,6 +40,7 @@ class TelloDroneAPI:
             self.transcribe()
 
     def initialize_stream(self):
+        print("Initializing stream...")
         with open('output.bin', 'wb') as file:
             t_end = time.time() + 5
             while time.time() < t_end:
@@ -51,11 +52,14 @@ class TelloDroneAPI:
                     print ('Unexpected error occurred while saving video: %s\n' % e)
                     break
             binary_video_data = ''
+            print("Reading binary data...")
             with open('output.bin', 'rb') as f:
                 binary_video_data = f.read()
+            print("Converting to mp4...")
             save_stream_as_mp4(binary_video_data, 'output_video.mp4')
+            print("Waiting for Symphonic API response...")
             print(transcribe('output_video.mp4'))
-                
+            
 if __name__ == "__main__":
     my_drone = TelloDroneAPI()
 
