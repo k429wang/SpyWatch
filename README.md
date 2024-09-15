@@ -1,4 +1,5 @@
 # SpyWatch
+Created by Kai Wang and Alexander Fu at Hack the North 2024.
 
 ## Inspiration
 We were interested in the Symphonic Labs API and it's potential in audioless environments. As we were discussing potential uses, we got our hands on a Tello drone with full video streaming capabilities and realized that this drone has no audio. What kind of spy drone can't even peep in on your target's conversations? So we applied our idea of using the Symphonic Labs API in tandem with the Tello drone to create SpyWatch, a drone surveillance software that lets you easily and reliably listen in on conversations, without needing to actually listen!
